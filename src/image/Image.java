@@ -17,7 +17,6 @@ public class Image {
     public Image(String imageName) {
         this.imageName = imageName;
         loadImage(imageName);
-        printImage();
     }
 
     public String getName() {
@@ -28,27 +27,27 @@ public class Image {
         ArrayList<String> lines = new ArrayList<>();
 
         try (Scanner scanner = new Scanner(Paths.get(imageName))) {
-            format = scanner.next();
-            width = scanner.nextInt();
-            height = scanner.nextInt();
+            this.format = scanner.next();
+            this.width = scanner.nextInt();
+            this.height = scanner.nextInt();
 
             if(format.equals("P1")) {
                 loadPBM(scanner);
             }
 
             if(format.equals("P2")) {
-                maxValue = scanner.nextInt();
+                this.maxValue = scanner.nextInt();
                 loadPGM(scanner);
             }
 
             if(format.equals("P3")) {
-                maxValue = scanner.nextInt();
+                this.maxValue = scanner.nextInt();
                 loadPPM(scanner);
             }
 
             // if values e.g. format.equlad("P2");
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
         System.out.println(lines);
         for(String line: lines) {
@@ -58,8 +57,8 @@ public class Image {
 
     public void loadPBM(Scanner scanner) {
         pixels = new int[height][width];
-        for(int row = 0; height< pixels.length; row++){
-            for(int column = 0; width<pixels.length; column++) {
+        for(int row = 0; row< height; row++){
+            for(int column = 0; column<width; column++) {
                 pixels[row][column] = scanner.nextInt();
             }
         }
@@ -67,8 +66,8 @@ public class Image {
 
     public void loadPGM(Scanner scanner) {
         pixels = new int[height][width];
-        for(int row = 0; height< pixels.length; row++){
-            for(int column = 0; width<pixels.length; column++) {
+        for(int row = 0; row< height; row++){
+            for(int column = 0; column<width; column++) {
                 pixels[row][column] = scanner.nextInt();
             }
         }
@@ -76,8 +75,8 @@ public class Image {
 
     public void loadPPM(Scanner scanner) {
         colorPixels = new int[height][width][3];
-        for(int row = 0; height< pixels.length; row++){
-            for(int column = 0; width<pixels.length; column++) {
+        for(int row = 0; row< height; row++){
+            for(int column = 0; column<width; column++) {
                 colorPixels[row][column][0] = scanner.nextInt();
                 colorPixels[row][column][1] = scanner.nextInt();
                 colorPixels[row][column][2] = scanner.nextInt();
@@ -96,19 +95,25 @@ public class Image {
         // printing only the pixels p1 and p2 same pbm, pgm
         // pbm || pgm
         if(format.equals("P1") || format.equals("P2")) {
+            System.out.println(format);
+            System.out.println(width);
+            System.out.println(height);
             for(int row = 0; row< height; row++) {
                 for(int column = 0; column < width; column++) {
-                    System.out.println(pixels[row][column] + " ");
+                    System.out.print(pixels[row][column] + " ");
                 }
             System.out.println();
             }
         }
         // ppm
         if(format.equals("P3")) {
+            System.out.println(format);
+            System.out.println(width);
+            System.out.println(height);
             // with colors
             for(int row=0; row< height; row++) {
                 for(int column =0; column< width; column++) {
-                    System.out.println(
+                    System.out.print(
                             " ( " +
                                     colorPixels[row][column][0] +
                                     colorPixels[row][column][1] +
@@ -118,7 +123,6 @@ public class Image {
                 System.out.println();
             }
         }
-
 
     }
 }

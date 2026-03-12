@@ -51,6 +51,8 @@ public class CommandInterface {
                     System.out.println("Image '" + parts[i] + "' added");
                     Image img = new Image(parts[i]);
                     sessions.getCurrentSession().addImage(img);
+                    //sessions.getCurrentSession().getImages();
+                    img.printImage();
                 }
             }
 
@@ -58,7 +60,6 @@ public class CommandInterface {
                 System.out.println("Image '" + parts[1] + "' added");
                 Image img = new Image(parts[1]);
                 sessions.getCurrentSession().addImage(img);
-
             }
 
             if(command.equals("grayscale")) {
