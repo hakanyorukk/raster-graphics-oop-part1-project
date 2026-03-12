@@ -32,7 +32,7 @@ public class Session {
     public void addImage(Image image) {
         images.add(image);
     }
-
+    
     public void addTransformation(Transformation transformation) {
         transformations.add(transformation);
     }
