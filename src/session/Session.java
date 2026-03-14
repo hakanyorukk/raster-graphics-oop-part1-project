@@ -36,4 +36,21 @@ public class Session {
     public void addTransformation(Transformation transformation) {
         transformations.add(transformation);
     }
+
+    public void applyTransformations() {
+        for(Transformation transformation : transformations) {
+            for(Image image : images) {
+                transformation.apply(image);
+            }
+        }
+
+        // save each image after all transformations applied
+
+        // handle file extensions
+        for(Image image: images) {
+            image.saveImage();
+        }
+        // clear transformations from the memory
+        transformations.clear();
+    }
 }

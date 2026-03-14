@@ -98,6 +98,14 @@ public class CommandInterface {
                 System.out.println(sessions.getSessionInfo());
             }
 
+            // save all images with transformation
+            if(command.equals("save")) {
+                sessions.getCurrentSession().applyTransformations();
+            }
+
+            // saveas saves under a new name only the image that was loaded first
+
+
         }
     }
 
