@@ -1,8 +1,11 @@
 package image;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Image {
@@ -18,6 +21,18 @@ public class Image {
     public Image(String imageName) {
         this.imageName = imageName;
         loadImage(imageName);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Image image = (Image) o;
+        return width == image.width && height == image.height && maxValue == image.maxValue && Objects.equals(imageName, image.imageName) && Objects.equals(format, image.format) && Objects.deepEquals(pixels, image.pixels) && Objects.deepEquals(colorPixels, image.colorPixels);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(imageName, format, width, height, maxValue, Arrays.deepHashCode(pixels), Arrays.deepHashCode(colorPixels));
     }
 
     public int[][] getPixels() {
@@ -49,7 +64,6 @@ public class Image {
                 loadPPM(scanner);
             }
 
-            // if values e.g. format.equlad("P2");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -58,7 +72,7 @@ public class Image {
     //pixels in the 2d array -> pixels came form width height //
     // load pbm P1 -> pixel bitmap black, white  0-1
     // load pgm P2 -> pixel graymap              0-255
-    // load ppm P3 -> pixel pixmap               rgb
+    // load ppm P3 -> pixel Pixmap               rgb
 
     public void loadPBM(Scanner scanner) {
         pixels = new int[height][width];
@@ -89,38 +103,35 @@ public class Image {
         }
     }
 
-    public void printImage() {
+    public String printImage() {
         // printing only the pixels p1 and p2 same pbm, pgm
         // pbm || pgm
+        StringBuilder result = new StringBuilder();
         if(format.equals("P1") || format.equals("P2")) {
-            System.out.println(format);
-            System.out.println(width);
-            System.out.println(height);
+            result.append(format).append("\n").append(width).append("\n").append(height).append("\n");
             for(int row = 0; row< height; row++) {
                 for(int column = 0; column < width; column++) {
-                    System.out.print(pixels[row][column] + " ");
+                    result.append(pixels[row][column]).append(" ");
                 }
-            System.out.println();
+                result.append("\n");
             }
         }
         // ppm
         if(format.equals("P3")) {
-            System.out.println(format);
-            System.out.println(width);
-            System.out.println(height);
+            result.append(format).append("\n").append(width).append("\n").append(height).append("\n");
             // with colors
             for(int row=0; row< height; row++) {
                 for(int column =0; column< width; column++) {
-                    System.out.print(
-                            " ( " +
-                                    colorPixels[row][column][0] +
-                                    colorPixels[row][column][1] +
-                                    colorPixels[row][column][2] + ")"
-                    );
+                    result.append(" ( ")
+                            .append(colorPixels[row][column][0])
+                            .append(colorPixels[row][column][1])
+                            .append(colorPixels[row][column][2])
+                                    .append(")");
                 }
-                System.out.println();
+                result.append("\n");
             }
         }
+        return result.toString();
     }
 
     public void rotate(String direction) {
@@ -132,13 +143,11 @@ public class Image {
     }
 
     public void rotateLeft() {
-        // -90 transpose() -> reverseCols
-
         if(format.equals("P3")) {
-            transposeColor(colorPixels);
+            colorPixels = transposeColor(colorPixels); // ← assign back!
             reverseColsColor(colorPixels);
         } else {
-            transpose(pixels);
+            pixels = transpose(pixels); // ← assign back!
             reverseCols(pixels);
         }
         int temp = width;
@@ -147,39 +156,42 @@ public class Image {
     }
 
     public void rotateRight() {
-        // +90 transpose()  -> reverseRows
         if(format.equals("P3")) {
-            transposeColor(colorPixels);
+            colorPixels = transposeColor(colorPixels); // ← assign back!
             reverseRowsColor(colorPixels);
         } else {
-            transpose(pixels);
+            pixels = transpose(pixels); // ← assign back!
             reverseRows(pixels);
         }
-        int temp = height;
-        height = width;
-        width = temp;
+        int temp = width;
+        width = height;
+        height = temp;
     }
 
-    public void transpose(int[][] matrix) {
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = row + 1; col < matrix.length; col++) {
-                int temp = matrix[row][col];
-                matrix[row][col] = matrix[col][row];
-                matrix[col][row] = temp;
+    public int[][] transpose(int[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        int[][] result = new int[cols][rows]; // swapped dimensions!
+        for(int row = 0; row < rows; row++) {
+            for(int col = 0; col < cols; col++) {
+                result[col][row] = matrix[row][col];
             }
         }
+        return result;
     }
 
-    public void transposeColor(int [][][] matrix) {
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = row + 1; col < matrix.length; col++) {
-                for(int i =0; i < 3; i++) {
-                    int temp = matrix[row][col][i];
-                    matrix[row][col][i] = matrix[col][row][i];
-                    matrix[col][row][i] = temp;
-                }
+    public int[][][] transposeColor(int[][][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        int[][][] result = new int[cols][rows][3];
+        for(int row = 0; row < rows; row++) {
+            for(int col = 0; col < cols; col++) {
+                result[col][row][0] = matrix[row][col][0];
+                result[col][row][1] = matrix[row][col][1];
+                result[col][row][2] = matrix[row][col][2];
             }
         }
+        return result;
     }
 
     public void reverseRows(int[][] matrix) {
@@ -227,7 +239,6 @@ public class Image {
             }
         }
     }
-
 
     public void applyNegative() {
         // newVal = maxVal - oldValue(pixel)
@@ -296,11 +307,24 @@ public class Image {
                 }
             }
         }
-
     }
 
     public void saveImage() {
-        try (PrintWriter writer = new PrintWriter(imageName)) {
+        String fileName = this.imageName;
+        writeToFile(fileName);
+
+    }
+
+
+
+    public void saveImageAs(String newName) {
+        String extension = getExtensionFormat(format);
+        String newImageName = newName + extension;
+        writeToFile(newImageName);
+    }
+
+    private void writeToFile(String fileName) {
+        try (PrintWriter writer = new PrintWriter(fileName)) {
             writer.println(format);
             writer.println(width + " " + height);
 
@@ -325,10 +349,18 @@ public class Image {
                     writer.println();
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public String getExtensionFormat(String format) {
+        switch(format) {
+            case "P3": return ".ppm";
+            case "P2": return ".pgm";
+            case "P1": return ".pbm";
+            default: throw new IllegalArgumentException("Unknown format");
+        }
+    }
+
 
 }

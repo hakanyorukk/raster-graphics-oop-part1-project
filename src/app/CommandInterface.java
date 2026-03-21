@@ -1,5 +1,6 @@
 package app;
 
+import exceptions.InvalidImageName;
 import image.Image;
 import session.SessionManager;
 import transformations.Grayscale;
@@ -7,7 +8,10 @@ import transformations.Monochrome;
 import transformations.Negative;
 import transformations.Rotate;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class CommandInterface {
     private Scanner scan;
@@ -48,18 +52,27 @@ public class CommandInterface {
                 sessions.createSession();
                 System.out.println("Session with ID: " + sessions.getCurrentSession().getId() + " started");
                 for(int i = 1; i < parts.length; i++) {
-                    System.out.println("Image '" + parts[i] + "' added");
-                    Image img = new Image(parts[i]);
-                    sessions.getCurrentSession().addImage(img);
-                    //sessions.getCurrentSession().getImages();
-                    img.printImage();
+                    try {
+                        loadImage(parts[i]);
+                    } catch (InvalidImageName e) {
+                        System.out.println(e.getMessage());
+                        System.out.println("Try again!");
+                    }
                 }
             }
 
             if(command.equals("add")) {
-                System.out.println("Image '" + parts[1] + "' added");
-                Image img = new Image(parts[1]);
-                sessions.getCurrentSession().addImage(img);
+                if (parts.length < 2) {
+                    System.out.println("Usage: add <imageName>");
+                    return;
+                }
+
+                try {
+                    loadImage(parts[1]);
+                } catch (InvalidImageName e) {
+                    System.out.println(e.getMessage());
+                    System.out.println("Try again!");
+                }
             }
 
             if(command.equals("grayscale")) {
@@ -105,8 +118,48 @@ public class CommandInterface {
 
             // saveas saves under a new name only the image that was loaded first
 
+            if(command.equals("saveas")) {
+                if(parts.length < 2) {
+                    System.out.println("Usage: saveas <filename>");
+                    return;
+                }
 
+                sessions.getCurrentSession().saveAs(parts[1]);
+            }
         }
     }
 
+    public void validateImageName(String imageName) throws InvalidImageName {
+        if(imageName == null || !imageName.contains(".")) {
+            throw new InvalidImageName("Invalid image name");
+        }
+
+        String extension = imageName.substring(imageName.lastIndexOf(".") + 1);
+
+       Set<String> validExtensions = Set.of("ppm", "pgm", "pbm");
+       if(!validExtensions.contains(extension)) {
+           throw new InvalidImageName("Invalid extension: " + extension);
+       }
+    }
+
+    public void loadImage(String imageName) throws InvalidImageName{
+        validateImageName(imageName);
+
+        checkImageAdded(imageName);
+        Image img = new Image(imageName);
+        sessions.getCurrentSession().addImage(img);
+        System.out.println(img.printImage());
+        System.out.println("Image '" + imageName + "' added");
+    }
+
+    public void checkImageAdded (String imageName) throws InvalidImageName {
+       List<Image> images = sessions.getCurrentSession().getImages();
+
+        for(Image img : images) {
+            System.out.println(img.getName());
+            if(img.getName().equals(imageName)) {
+                throw new InvalidImageName("Image already added!");
+            }
+        }
+    }
 }

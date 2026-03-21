@@ -40,6 +40,9 @@ public class SessionManager {
         for(Transformation transformation: currentSession.getTransformations()) {
             result.append(transformation.getName()).append(", ");
         }
+        if(currentSession.getTransformations().isEmpty()) {
+            result.append("No transformation added yet!");
+        }
         return result.toString();
     }
 

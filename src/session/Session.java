@@ -4,12 +4,14 @@ import image.Image;
 import transformations.Transformation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Session {
-    int id;
-    List<Image> images;
-    List<Transformation> transformations;
+    private int id;
+    private List<Image> images;
+    private List<Transformation> transformations;
 
     public Session(int id) {
         this.id = id;
@@ -46,11 +48,20 @@ public class Session {
 
         // save each image after all transformations applied
 
-        // handle file extensions
         for(Image image: images) {
             image.saveImage();
         }
         // clear transformations from the memory
+        transformations.clear();
+    }
+
+    public void saveAs(String newName) {
+        Image first = images.get(0);
+        for(Transformation transformation : transformations) {
+            transformation.apply(first);
+        }
+
+        first.saveImageAs(newName);
         transformations.clear();
     }
 }
