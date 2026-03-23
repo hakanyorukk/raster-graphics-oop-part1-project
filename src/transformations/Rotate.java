@@ -19,6 +19,11 @@ public class Rotate implements Transformation{
         return "rotate " + direction;
     }
 
+    @Override
+    public String toString() {
+        return "Rotate, direction: " + direction;
+    }
+
     // 1. +90  => Transpose   -> ReverseRows
 
     // 2. -90  => Transpose   -> ReverseCols  |   ReverseCols -> Transpose

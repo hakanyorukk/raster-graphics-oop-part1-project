@@ -1,9 +1,7 @@
 package image;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
@@ -147,7 +145,7 @@ public class Image {
             colorPixels = transposeColor(colorPixels); // ← assign back!
             reverseColsColor(colorPixels);
         } else {
-            pixels = transpose(pixels); // ← assign back!
+            pixels = transpose(pixels); //  assign back!
             reverseCols(pixels);
         }
         int temp = width;
@@ -157,10 +155,10 @@ public class Image {
 
     public void rotateRight() {
         if(format.equals("P3")) {
-            colorPixels = transposeColor(colorPixels); // ← assign back!
+            colorPixels = transposeColor(colorPixels); //  assign back!
             reverseRowsColor(colorPixels);
         } else {
-            pixels = transpose(pixels); // ← assign back!
+            pixels = transpose(pixels); //  assign back!
             reverseRows(pixels);
         }
         int temp = width;
@@ -314,8 +312,6 @@ public class Image {
         writeToFile(fileName);
 
     }
-
-
 
     public void saveImageAs(String newName) {
         String extension = getExtensionFormat(format);

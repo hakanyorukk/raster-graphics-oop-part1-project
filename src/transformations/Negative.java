@@ -13,4 +13,9 @@ public class Negative implements Transformation{
     public String getName() {
         return "negative";
     }
+
+    @Override
+    public String toString() {
+        return "Negative";
+    }
 }

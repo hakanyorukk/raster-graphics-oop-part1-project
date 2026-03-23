@@ -16,4 +16,9 @@ public class Monochrome implements Transformation{
     public String getName() {
         return "monochrome";
     }
+
+    @Override
+    public String toString() {
+        return "Monochrome";
+    }
 }

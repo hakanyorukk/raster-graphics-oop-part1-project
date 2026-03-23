@@ -4,9 +4,7 @@ import image.Image;
 import transformations.Transformation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Session {
     private int id;
@@ -45,9 +43,7 @@ public class Session {
                 transformation.apply(image);
             }
         }
-
         // save each image after all transformations applied
-
         for(Image image: images) {
             image.saveImage();
         }
@@ -60,8 +56,11 @@ public class Session {
         for(Transformation transformation : transformations) {
             transformation.apply(first);
         }
-
         first.saveImageAs(newName);
         transformations.clear();
+    }
+
+    public void undo(){
+        transformations.removeLast();
     }
 }

@@ -15,4 +15,9 @@ public class Grayscale implements Transformation{
         return "grayscale";
     }
 
+    @Override
+    public String toString() {
+        return "Grayscale";
+    }
+
 }

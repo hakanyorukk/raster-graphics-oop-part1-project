@@ -8,5 +8,9 @@ public class Main {
 
         CommandInterface ui = new CommandInterface(scan);
         ui.start();
+
+        // 1. undo transaction
+        // 2. refactor commandInterface - use switch
+        // 3. complete collage command
     }
 }
