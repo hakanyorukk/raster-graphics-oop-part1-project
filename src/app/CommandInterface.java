@@ -36,19 +36,18 @@ public class CommandInterface {
 
                 case "exit" -> {
                     System.out.println("Exiting the program...");
-                    break;
+                    return;
                 }
 
                 case "load" -> {
-                    sessions.createSession();
-                    System.out.println("Session with ID: " + sessions.getCurrentSession().getId() + " started");
-                    for(int i = 1; i < parts.length; i++) {
-                        try {
-                            loadImage(parts[i]);
-                        } catch (InvalidImageName e) {
-                            System.out.println(e.getMessage());
-                            System.out.println("Try again!");
-                        }
+                    try {
+                        checkPartsLength(2);
+                        sessions.createSession();
+                        loadImage(parts[1]);
+                        System.out.println("Session with ID: " + sessions.getCurrentSession().getId() + " started");
+                    } catch (FalseUsage e) {
+                        System.out.println(e.getMessage());
+                        System.out.println("Try again!");
                     }
                 }
 
@@ -88,9 +87,15 @@ public class CommandInterface {
                         System.out.println("Usage: rotate <left | right>");
                     }
                 }
-                case "session info" -> {
-                    System.out.println(sessions.getSessionInfo());
+
+                case "session" -> {
+                    if(parts.length > 1 && parts[1].equals("info")) {
+                        System.out.println(sessions.getSessionInfo());
+                    } else {
+                        System.out.println("Unknown session command");
+                    }
                 }
+
                 case "switch" -> {
                     try {
                         checkPartsLength(2);
@@ -132,21 +137,43 @@ public class CommandInterface {
 
                 case "collage" -> {
                     try {
-                        checkPartsLength(4);
+                        checkPartsLength(5);
+
                         String direction = parts[1];
-                        String image1 = parts[2];
-                        String image2 = parts[3];
-                        //String outImage = parts[4];
+                        String img1Name = parts[2];
+                        String img2Name = parts[3];
+                        String outputName = parts[4];
 
-                        // validate inputs
                         checkCollageDirection(direction);
-                        validateImageName(image1);
-                        validateImageName(image2);
-                        checkImagesFormat(image1, image2);
-                        // collageImages
+                        validateImageName(img1Name);
+                        validateImageName(img2Name);
 
-                        String collageName = "collage.ppm"; // later take value form the fund
-                        System.out.println("New collage " + collageName + " created.");
+                        Image image1 = sessions.getCurrentSession().findImage(img1Name);
+                        Image image2 = sessions.getCurrentSession().findImage(img2Name);
+
+                        if(image1 == null || image2 == null) {
+                            throw new InvalidImageName("One or both images not found in session");
+                        }
+
+                        if(!image1.getFormat().equals(image2.getFormat())) {
+                            throw new InvalidImageName(
+                                    "Cannot make a collage from different types! (." +
+                                            image1.getFormat() + " and ." + image2.getFormat() + ")"
+                            );
+                        }
+
+                        Image result;
+
+                        if(direction.equals("horizontal")) {
+                            result = image1.collageHorizontal(image2, outputName);
+                        } else {
+                            result = image1.collageVertical(image2, outputName);
+                        }
+
+                        sessions.getCurrentSession().addImage(result);
+
+                        System.out.println("New collage \"" + outputName + "\" created");
+
                     } catch (FalseUsage | InvalidDirection | InvalidImageName e) {
                         System.out.println(e.getMessage());
                         //System.out.println("Try again!");
@@ -171,7 +198,7 @@ public class CommandInterface {
 
     public void checkPartsLength(int partLength) throws FalseUsage {
         if(parts.length < partLength) {
-            throw new FalseUsage("Invalid command");
+            throw new FalseUsage("Invalid command, partsLength: " + parts.length + ", expected: " + partLength);
         }
     }
 
@@ -202,11 +229,9 @@ public class CommandInterface {
 
     public void loadImage(String imageName) throws InvalidImageName{
         validateImageName(imageName);
-
         checkImageAdded(imageName);
         Image img = new Image(imageName);
         sessions.getCurrentSession().addImage(img);
-        System.out.println(img.printImage());
         System.out.println("Image '" + imageName + "' added");
     }
 
@@ -214,7 +239,6 @@ public class CommandInterface {
        List<Image> images = sessions.getCurrentSession().getImages();
 
         for(Image img : images) {
-            System.out.println(img.getName());
             if(img.getName().equals(imageName)) {
                 throw new InvalidImageName("Image already added!");
             }
@@ -229,4 +253,5 @@ public class CommandInterface {
             throw new InvalidImageName("Cannot make a collage from different types! ( ." + imgExt1 + " and ." + imgExt2 +")");
         }
     }
+
 }

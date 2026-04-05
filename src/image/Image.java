@@ -21,6 +21,64 @@ public class Image {
         loadImage(imageName);
     }
 
+    // p1 pbm
+    public Image(String imageName, String format, int width, int height, int[][] pixels) {
+        this.imageName = imageName;
+        this.format = format;
+        this.width = width;
+        this.height = height;
+        this.pixels = pixels;
+    }
+
+    // p2 pgm
+    public Image(String imageName, String format, int width, int height, int maxValue, int[][] pixels) {
+        this.imageName = imageName;
+        this.format = format;
+        this.width = width;
+        this.maxValue = maxValue;
+        this.height = height;
+        this.pixels = pixels;
+    }
+
+    // p3 ppm
+    public Image(String imageName, String format, int width, int height, int maxValue, int[][][] colorPixels) {
+        this.imageName = imageName;
+        this.format = format;
+        this.width = width;
+        this.height = height;
+        this.maxValue = maxValue;
+        this.colorPixels = colorPixels;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getMaxValue() {
+        return maxValue;
+    }
+
+    public int[][][] getColorPixels() {
+        return colorPixels;
+    }
+
+    public int[][] getPixels() {
+        return pixels;
+    }
+
+    public String getName() {
+        return imageName;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -31,14 +89,6 @@ public class Image {
     @Override
     public int hashCode() {
         return Objects.hash(imageName, format, width, height, maxValue, Arrays.deepHashCode(pixels), Arrays.deepHashCode(colorPixels));
-    }
-
-    public int[][] getPixels() {
-        return pixels;
-    }
-
-    public String getName() {
-        return imageName;
     }
 
     public void loadImage(String imageName) {
@@ -107,7 +157,7 @@ public class Image {
         StringBuilder result = new StringBuilder();
         if(format.equals("P1") || format.equals("P2")) {
             result.append(format).append("\n").append(width).append("\n").append(height).append("\n");
-            for(int row = 0; row< height; row++) {
+            for(int row = 0; row < height; row++) {
                 for(int column = 0; column < width; column++) {
                     result.append(pixels[row][column]).append(" ");
                 }
@@ -358,5 +408,202 @@ public class Image {
         }
     }
 
+    public Image collageHorizontal(Image other, String newName) {
+
+        if(!this.format.equals(other.format)) {
+            System.out.println("Different formats!");
+            return null;
+        }
+
+        if(this.width != other.width || this.height != other.height) {
+            System.out.println("Different sizes!");
+            return null;
+        }
+
+        if(this.format.equals("P1")) {
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width + other.width,
+                    this.height,
+                    new int[this.height][this.width + other.width]
+            );
+
+            for(int r = 0; r < height; r++) {
+                // left image
+                for(int c = 0; c < width; c++) {
+                    result.pixels[r][c] = this.pixels[r][c];
+                }
+
+                // right image
+                for(int c = 0; c < width; c++) {
+                    result.pixels[r][c + width] = other.pixels[r][c];
+                }
+            }
+            return result;
+        }
+
+        if(this.format.equals("P2")) {
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width + other.width,
+                    this.height,
+                    this.maxValue,
+                    new int[this.height][this.width + other.width]
+            );
+
+            for(int r = 0; r < height; r++) {
+                // left image
+                for(int c = 0; c < width; c++) {
+                    result.pixels[r][c] = this.pixels[r][c];
+                }
+                // right image
+                for(int c = 0; c < width; c++) {
+                    result.pixels[r][c + width] = other.pixels[r][c];
+                }
+            }
+            return result;
+        }
+
+        if(format.equals("P3")) {
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width + other.width,
+                    this.height,
+                    this.maxValue,
+                    new int[this.height][this.width + other.width][3]);
+            for(int r = 0; r < height; r++) {
+                // left image
+                for(int c = 0; c < width; c++) {
+                    for(int i = 0; i < 3; i++) {
+                        result.colorPixels[r][c][i] = this.colorPixels[r][c][i];
+                    }
+                }
+
+                // right image
+                for(int c = 0; c < width; c++) {
+                    for(int i = 0; i < 3; i++) {
+                        result.colorPixels[r][c + width][i] = other.colorPixels[r][c][i];
+                    }
+                }
+            }
+            return result;
+        }
+        return null;
+    }
+
+
+    public Image collageVertical(Image other, String newName) {
+
+        if(!this.format.equals(other.format)) {
+            System.out.println("Different formats!");
+            return null;
+        }
+
+        if(this.width != other.width || this.height != other.height) {
+            System.out.println("Different sizes!");
+            return null;
+        }
+
+        // PBM (P1)
+        if(format.equals("P1")) {
+
+            int[][] newPixels = new int[this.height + other.height][this.width];
+
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width,
+                    this.height + other.height,
+                    newPixels
+            );
+
+            // top image
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    result.getPixels()[r][c] = this.pixels[r][c];
+                }
+            }
+
+            // bottom image
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    result.getPixels()[r + height][c] = other.pixels[r][c];
+                }
+            }
+
+            return result;
+        }
+
+        // PGM (P2)
+        if(format.equals("P2")) {
+
+            int[][] newPixels = new int[this.height + other.height][this.width];
+
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width,
+                    this.height + other.height,
+                    this.maxValue,
+                    newPixels
+            );
+
+            // top
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    result.getPixels()[r][c] = this.pixels[r][c];
+                }
+            }
+
+            // bottom
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    result.getPixels()[r + height][c] = other.pixels[r][c];
+                }
+            }
+
+            return result;
+        }
+
+        // PPM (P3)
+        if(format.equals("P3")) {
+
+            int[][][] newPixels = new int[this.height + other.height][this.width][3];
+
+            Image result = new Image(
+                    newName,
+                    this.format,
+                    this.width,
+                    this.height + other.height,
+                    this.maxValue,
+                    newPixels
+            );
+
+            // top
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    for(int i = 0; i < 3; i++) {
+                        result.getColorPixels()[r][c][i] = this.colorPixels[r][c][i];
+                    }
+                }
+            }
+
+            // bottom
+            for(int r = 0; r < height; r++) {
+                for(int c = 0; c < width; c++) {
+                    for(int i = 0; i < 3; i++) {
+                        result.getColorPixels()[r + height][c][i] = other.colorPixels[r][c][i];
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        return null;
+    }
 
 }

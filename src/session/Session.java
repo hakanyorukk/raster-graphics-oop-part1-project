@@ -63,4 +63,13 @@ public class Session {
     public void undo(){
         transformations.removeLast();
     }
+
+    public Image findImage(String name) {
+        for(Image img : images) {
+            if(img.getName().equals(name)) {
+                return img;
+            }
+        }
+        return null;
+    }
 }
