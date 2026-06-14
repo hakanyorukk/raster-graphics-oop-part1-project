@@ -28,3 +28,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Claude Code (local agent worktrees and settings - do not publish) ###
+.claude/

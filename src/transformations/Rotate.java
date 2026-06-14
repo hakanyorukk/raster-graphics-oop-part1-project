@@ -2,44 +2,21 @@ package transformations;
 
 import image.Image;
 
-public class Rotate implements Transformation{
-    private String direction;
+/** Rotates an image 90 degrees in a given {@link Direction}. */
+public class Rotate implements Transformation {
+    private final Direction direction;
 
-    public Rotate(String direction) {
+    public Rotate(Direction direction) {
         this.direction = direction;
     }
 
     @Override
-    public void apply(Image image) {
-       image.rotate(direction);
+    public Image apply(Image image) {
+        return direction == Direction.LEFT ? image.rotateLeft() : image.rotateRight();
     }
 
     @Override
     public String getName() {
-        return "rotate " + direction;
+        return "rotate " + direction.label();
     }
-
-    @Override
-    public String toString() {
-        return "Rotate, direction: " + direction;
-    }
-
-    // 1. +90  => Transpose   -> ReverseRows
-
-    // 2. -90  => Transpose   -> ReverseCols  |   ReverseCols -> Transpose
-
-    // 3. +180 => ReverseRows -> ReverseCols  |  +90 * 2
-
-    // 4. -180 => ReverseCols -> ReverseRows  |  -90 * 2
-
-
-    // transpose => Flip matrix[i][j] -> matrix[j][i]
-
-
-    // reverseRows =>  1 2 3 -> 3 2 1
-
-
-    //                 1       3
-    //   reverseCols   2   ->  2
-    //                 3       1
 }

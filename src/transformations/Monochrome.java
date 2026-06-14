@@ -2,23 +2,16 @@ package transformations;
 
 import image.Image;
 
-public class Monochrome implements Transformation{
+/** Converts images to black and white only (no shades of grey). */
+public class Monochrome implements Transformation {
+
     @Override
-    public void apply(Image image) {
-        image.applyMonochrome();
-        // only black or white pixels
-        // threshold = maxValue / 2 => 128 50% density
-        // pixel > threshold => white(255)
-        // pixel < threshold => black (0)
+    public Image apply(Image image) {
+        return image.monochrome();
     }
 
     @Override
     public String getName() {
         return "monochrome";
-    }
-
-    @Override
-    public String toString() {
-        return "Monochrome";
     }
 }

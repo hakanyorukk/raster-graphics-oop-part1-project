@@ -2,22 +2,16 @@ package transformations;
 
 import image.Image;
 
-public class Grayscale implements Transformation{
+/** Converts colour images to shades of grey. */
+public class Grayscale implements Transformation {
+
     @Override
-    public void apply(Image image) {
-        image.applyGrayScale();
-        // only for ppm format (color images)
-        // gray = (R + G + B) / 3
+    public Image apply(Image image) {
+        return image.grayscale();
     }
 
     @Override
     public String getName() {
         return "grayscale";
     }
-
-    @Override
-    public String toString() {
-        return "Grayscale";
-    }
-
 }

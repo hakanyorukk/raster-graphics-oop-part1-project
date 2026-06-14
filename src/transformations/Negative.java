@@ -2,20 +2,16 @@ package transformations;
 
 import image.Image;
 
-public class Negative implements Transformation{
+/** Produces the negative (colour reversal) of an image. */
+public class Negative implements Transformation {
+
     @Override
-    public void apply(Image image) {
-        image.applyNegative();
-        // invert pixels values only for pgm, ppm (max value)
+    public Image apply(Image image) {
+        return image.negative();
     }
 
     @Override
     public String getName() {
         return "negative";
-    }
-
-    @Override
-    public String toString() {
-        return "Negative";
     }
 }
