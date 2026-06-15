@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 16pt; color: #000; }
+  h1 { font-size: 16pt; font-weight: bold; margin-top: 18pt; }
+  h2 { font-size: 13pt; font-weight: bold; margin-top: 14pt; }
+  h3 { font-size: 12pt; font-weight: bold; font-style: italic; margin-top: 10pt; }
+  pre, code { font-family: 'Consolas', monospace; font-size: 10.5pt; }
+  pre { background: #f5f5f5; border: 1px solid #cccccc; padding: 8px; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1px solid #888; padding: 4px 6px; font-size: 11pt; vertical-align: top; }
+  th { background: #e8e8e8; }
+  mark { background: #fff200; }
+  .ph { background: #fff200; font-style: italic; }
+  .figure { border: 1.5px dashed #999; padding: 20px; text-align: center; color: #555; font-style: italic; margin: 10px 0; }
+  .caption { font-size: 10.5pt; font-style: italic; text-align: center; margin-bottom: 12pt; }
+  .title-page { text-align: center; }
+  .pagebreak { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- ===================== TITLE PAGE ===================== -->
+<div class="title-page">
+<p style="margin-top: 40pt;"><span class="ph">[University name — e.g. Sofia University "St. Kliment Ohridski"]</span></p>
+<p><span class="ph">[Faculty — e.g. Faculty of Mathematics and Informatics]</span></p>
+<p><span class="ph">[Department / Specialty — e.g. Software Engineering]</span></p>
+
+<p style="margin-top: 80pt; font-size: 22pt; font-weight: bold;">Course Project</p>
+<p style="font-size: 18pt;">Object-Oriented Programming (Part 1)</p>
+<p style="font-size: 16pt; margin-top: 20pt;">Project 14: Raster Graphics<br>A Console Bitmap Image Editor (PPM / PGM / PBM)</p>
+
+<p style="margin-top: 90pt;">Prepared by: <span class="ph">[Your full name]</span></p>
+<p>Faculty number: <span class="ph">[your faculty number — likely 23221012, please confirm]</span></p>
+<p>Group / Stream: <span class="ph">[your group]</span></p>
+<p>Supervisor / Assistant: <span class="ph">[supervisor name]</span></p>
+
+<p style="margin-top: 60pt;"><span class="ph">[Town]</span>, <span class="ph">[year — e.g. 2025]</span></p>
+</div>
+
+<!-- ===================== TABLE OF CONTENTS ===================== -->
+<div class="pagebreak"></div>
+<h1>Table of Contents</h1>
+<p class="ph">[Generate the Table of Contents automatically in Word: place the cursor here, then References &rarr; Table of Contents &rarr; Automatic Table. It will pick up all the headings below. Delete this note afterwards.]</p>
+
+<!-- ===================== CHAPTER 1 ===================== -->
+<div class="pagebreak"></div>
+<h1>Chapter 1. The Lead</h1>
+
+<h2>1.1. Description and idea of the project</h2>
+<p>This project is a console-based raster (bitmap) image editor written in Java that works with the three plain Netpbm image formats: PBM (black-and-white), PGM (grayscale) and PPM (colour). The user interacts with the program through a command-line interface, loading one or more images into a numbered <em>session</em>, queueing transformations such as grayscale, negative, monochrome and 90&deg; rotation, and finally writing the results back to disk. Several independent sessions can exist at the same time, and the user can switch between them. The central idea is that transformations are <em>deferred</em>: they are only physically applied to the pixels when the user saves, which keeps the original data intact until the last possible moment.</p>
+
+<h2>1.2. Purpose and objectives of the development</h2>
+<p>The purpose of the project is to build a correct, robust and cleanly structured image editor that demonstrates the core principles of object-oriented programming. The concrete objectives are:</p>
+<ul>
+  <li>To read and write valid Netpbm files (magic numbers P1, P2, P3) without corrupting them.</li>
+  <li>To support the full command set required by the assignment: <code>load</code>, <code>add</code>, <code>close</code>, <code>save</code>, <code>saveas</code>, <code>help</code>, <code>exit</code>, <code>grayscale</code>, <code>monochrome</code>, <code>negative</code>, <code>rotate</code>, <code>undo</code>, <code>session info</code>, <code>switch</code> and <code>collage</code>.</li>
+  <li>To manage multiple images and multiple sessions with deferred (pending) transformations.</li>
+  <li>To apply object-oriented design (inheritance, polymorphism, interfaces and design patterns) so that the program is easy to extend and to defend.</li>
+  <li>To fail gracefully &mdash; never crash on invalid input, but report a clear message instead.</li>
+</ul>
+
+<h2>1.3. Structure of the documentation</h2>
+<ul>
+  <li><strong>Chapter 2</strong> introduces the subject area: the Netpbm formats, the algorithms used and the functional/non-functional requirements.</li>
+  <li><strong>Chapter 3</strong> describes the design: the package structure and the diagrams of the architecture.</li>
+  <li><strong>Chapter 4</strong> covers the implementation and testing: the most important classes, the algorithms and the test scenarios.</li>
+  <li><strong>Chapter 5</strong> concludes with a summary of the achieved objectives and directions for future development.</li>
+</ul>
+
+<!-- ===================== CHAPTER 2 ===================== -->
+<div class="pagebreak"></div>
+<h1>Chapter 2. Overview of the subject area</h1>
+
+<h2>2.1. Basic definitions, concepts and algorithms</h2>
+<p>A <strong>raster (bitmap) image</strong> is a rectangular grid of pixels. This project works with the <strong>Netpbm</strong> family of formats, which store the pixel grid as plain ASCII text. Every file begins with a two-character <em>magic number</em> that identifies the format, followed by the width, the height, an optional maximum colour value, and then the pixel data separated by whitespace:</p>
+<table>
+  <tr><th>Format</th><th>Magic</th><th>Meaning</th><th>Pixel</th><th>Max value</th></tr>
+  <tr><td>PBM</td><td>P1</td><td>Portable Bitmap (black &amp; white)</td><td>one value, 0 or 1</td><td>fixed at 1</td></tr>
+  <tr><td>PGM</td><td>P2</td><td>Portable Graymap (grayscale)</td><td>one value, 0..max</td><td>e.g. 255</td></tr>
+  <tr><td>PPM</td><td>P3</td><td>Portable Pixmap (colour)</td><td>three values R G B, each 0..max</td><td>e.g. 255</td></tr>
+</table>
+<p class="caption">Table 1. The three supported Netpbm formats.</p>
+
+<p>The transformations rely on the following algorithms:</p>
+<ul>
+  <li><strong>Grayscale</strong> &mdash; for a colour image, every pixel is replaced by the average of its channels, <code>gray = (R + G + B) / 3</code>, written back into all three channels so the image stays a valid PPM. Grayscale has no effect on PBM/PGM images, which already contain no colour.</li>
+  <li><strong>Negative</strong> &mdash; every value <code>v</code> is replaced by <code>max - v</code> (for PBM, <code>1 - v</code>), inverting the image.</li>
+  <li><strong>Monochrome</strong> &mdash; each pixel is compared with a threshold of <code>max / 2</code>; values below it become 0 and the rest become <code>max</code>, leaving only two tones.</li>
+  <li><strong>Rotation (90&deg;)</strong> &mdash; performed by remapping pixel coordinates and swapping the width and height (see section 4.2).</li>
+  <li><strong>Collage</strong> &mdash; two images of the same format and size are copied into a larger array, side by side (horizontal) or stacked (vertical).</li>
+</ul>
+
+<h2>2.2. Defining problems and complexity of the task</h2>
+<p>The main difficulties of the task are:</p>
+<ul>
+  <li><strong>Three different formats</strong> with different pixel representations (one channel for PBM/PGM, three for PPM) and a different header (PBM has no max-value line). The code must treat them uniformly without scattering format checks everywhere.</li>
+  <li><strong>Deferred transformations</strong> &mdash; operations must be remembered and applied only at save time, which means the program keeps a queue of pending operations per session.</li>
+  <li><strong>Multiple sessions</strong> &mdash; several independent working contexts must coexist, each with its own images and its own pending operations.</li>
+  <li><strong>Robust I/O</strong> &mdash; the program must produce files that are still valid Netpbm and must not crash on a missing or malformed file.</li>
+</ul>
+
+<h2>2.3. Approaches and methods for solving the problems</h2>
+<p>The problems above are solved with object-oriented techniques rather than long conditional blocks:</p>
+<ul>
+  <li><strong>Polymorphic image hierarchy</strong> &mdash; each format is its own class, so format-specific behaviour is selected by polymorphism instead of <code>if (format == "P3")</code> checks.</li>
+  <li><strong>Command design pattern</strong> &mdash; each user command is a separate class, so the main loop does not contain a large <code>switch</code> statement.</li>
+  <li><strong>Strategy pattern</strong> &mdash; each transformation is an object that can be stored in a list and applied later, which directly supports the deferred-transformation and undo requirements.</li>
+  <li><strong>Factory</strong> &mdash; a single place (the reader) decides which image subclass to create from the magic number.</li>
+</ul>
+
+<h2>2.4. Functional and non-functional requirements</h2>
+<p><strong>Functional requirements</strong> (what the program must do) are summarised in Table 2.</p>
+<table>
+  <tr><th>Command</th><th>Effect</th></tr>
+  <tr><td>load &lt;f1&gt; [f2 ...]</td><td>Start a new session and load one or more images into it.</td></tr>
+  <tr><td>add &lt;file&gt;</td><td>Add an image to the current session.</td></tr>
+  <tr><td>close</td><td>Close the current session.</td></tr>
+  <tr><td>save</td><td>Apply pending transformations to all images and write them back.</td></tr>
+  <tr><td>saveas &lt;file&gt;</td><td>Save the first image of the session under a new name.</td></tr>
+  <tr><td>grayscale / monochrome / negative</td><td>Queue the corresponding colour transformation.</td></tr>
+  <tr><td>rotate &lt;left|right&gt;</td><td>Queue a 90&deg; rotation.</td></tr>
+  <tr><td>undo</td><td>Remove the last queued transformation.</td></tr>
+  <tr><td>session info</td><td>Show the session id, its images and its pending transformations.</td></tr>
+  <tr><td>switch &lt;id&gt;</td><td>Switch to another session.</td></tr>
+  <tr><td>collage &lt;dir&gt; &lt;img1&gt; &lt;img2&gt; &lt;out&gt;</td><td>Join two images into a new one.</td></tr>
+  <tr><td>help / exit</td><td>Print help / leave the program.</td></tr>
+</table>
+<p class="caption">Table 2. Functional requirements (supported commands).</p>
+
+<p><strong>Non-functional requirements</strong> (qualities of the program):</p>
+<ul>
+  <li><strong>Robustness</strong> &mdash; invalid input never crashes the program; it produces a clear error message.</li>
+  <li><strong>Maintainability / extensibility</strong> &mdash; a new command or a new image format can be added by writing one new class.</li>
+  <li><strong>Correctness</strong> &mdash; saved files are always valid Netpbm files.</li>
+  <li><strong>Usability</strong> &mdash; every command prints a message describing what happened.</li>
+</ul>
+
+<!-- ===================== CHAPTER 3 ===================== -->
+<div class="pagebreak"></div>
+<h1>Chapter 3. Design</h1>
+
+<h2>3.1. General structure of the project and packages</h2>
+<p>The source code is divided into seven packages, each with a single responsibility:</p>
+<table>
+  <tr><th>Package</th><th>Responsibility</th><th>Main classes</th></tr>
+  <tr><td><code>app</code></td><td>Program entry point and the read-eval-print loop.</td><td>Application, Editor</td></tr>
+  <tr><td><code>command</code></td><td>The Command pattern: one class per command plus the supporting infrastructure.</td><td>Command, ActiveSessionCommand, CommandRegistry, AppContext, Args, and 15 command classes</td></tr>
+  <tr><td><code>image</code></td><td>The polymorphic image model.</td><td>Image, SingleChannelImage, PBMImage, PGMImage, PPMImage, CollageDirection</td></tr>
+  <tr><td><code>io</code></td><td>Reading and writing Netpbm files.</td><td>ImageReader, ImageWriter</td></tr>
+  <tr><td><code>transformations</code></td><td>The Strategy pattern: deferred image operations.</td><td>Transformation, Grayscale, Monochrome, Negative, Rotate, Direction</td></tr>
+  <tr><td><code>session</code></td><td>Sessions and the set of all sessions.</td><td>Session, SessionManager</td></tr>
+  <tr><td><code>exceptions</code></td><td>Typed, application-specific exceptions.</td><td>FalseUsage, InvalidDirection, InvalidImageName</td></tr>
+</table>
+<p class="caption">Table 3. Packages and their responsibilities.</p>
+
+<h2>3.2. Diagrams</h2>
+<p>The overall package dependencies flow in one direction, from <code>app</code> towards the model and services, which keeps the design free of circular dependencies.</p>
+<div class="figure">[FIGURE 1: insert a package / architecture diagram here.<br>Suggested content: boxes for app, command, image, io, transformations, session, exceptions with arrows showing that app depends on command, command depends on image/io/session, etc. You can draw this in draw.io / PlantUML and paste a screenshot.]</div>
+<p class="caption">Figure 1. Package structure of the project.</p>
+
+<div class="figure">[FIGURE 2: insert a UML class diagram of the image hierarchy here.<br>Suggested content: abstract Image at the top; SingleChannelImage extends Image; PBMImage and PGMImage extend SingleChannelImage; PPMImage extends Image. Show the abstract operations (negative, rotateLeft, rotateRight, grayscale, monochrome, collage, toNetpbm).]</div>
+<p class="caption">Figure 2. The polymorphic image class hierarchy.</p>
+
+<div class="figure">[FIGURE 3: insert a sequence / flow diagram of command execution here.<br>Suggested content: user types a line &rarr; Editor splits it &rarr; CommandRegistry returns the Command object &rarr; command.execute() runs &rarr; for transformations, a Transformation is queued in the Session.]</div>
+<p class="caption">Figure 3. Flow of a command from input to execution.</p>
+
+<!-- ===================== CHAPTER 4 ===================== -->
+<div class="pagebreak"></div>
+<h1>Chapter 4. Implementation and testing</h1>
+
+<h2>4.1. Class implementation</h2>
+
+<h3>The image hierarchy</h3>
+<p>The abstract class <code>Image</code> holds only the data common to all formats (name, width, height) and declares the operations every image must support. Each concrete format provides its own pixel storage and its own implementation, which removes all <code>format.equals(...)</code> branching:</p>
+<pre>public abstract class Image {
+    protected String name;
+    protected int width, height;
+
+    public abstract String magicNumber();   // "P1" / "P2" / "P3"
+    public abstract Image negative();
+    public abstract Image rotateLeft();
+    public abstract Image rotateRight();
+    public abstract Image grayscale();
+    public abstract Image monochrome();
+    public abstract Image collage(Image other, CollageDirection dir, String name);
+    public abstract String toNetpbm();       // serialise to valid Netpbm text
+}</pre>
+<p>Because PBM and PGM both store a single value per pixel in an <code>int[][]</code> grid, their shared logic (negative, rotation, collage, serialisation) lives once in an intermediate abstract class, <code>SingleChannelImage</code>. <code>PPMImage</code> stores three channels in an <code>int[][][]</code> grid and overrides the operations itself. A key design decision is that <code>grayscale()</code> on a PPM keeps the image a PPM (it sets R = G = B), so the saved file stays valid and its extension still matches its contents.</p>
+
+<h3>The Command pattern</h3>
+<p>Every user command is a class implementing a small interface:</p>
+<pre>public interface Command {
+    void execute(String[] args, AppContext ctx);
+}</pre>
+<p>Commands that require a loaded session extend the abstract class <code>ActiveSessionCommand</code>, which performs the "is a session loaded?" check once (the Template Method pattern) and only then calls the subclass:</p>
+<pre>public abstract class ActiveSessionCommand implements Command {
+    public final void execute(String[] args, AppContext ctx) {
+        if (ctx.sessions().getCurrentSession() == null) {
+            System.out.println("No active session. Use 'load &lt;file&gt;' to start one.");
+            return;
+        }
+        run(args, ctx);
+    }
+    protected abstract void run(String[] args, AppContext ctx);
+}</pre>
+<p>The <code>CommandRegistry</code> maps command names to objects, and the <code>Editor</code> loop simply looks up the object and runs it &mdash; there is no large <code>switch</code> statement. <code>AppContext</code> is a small interface exposing only the services a command may use (the session manager, the reader and the writer), so commands depend on this contract rather than on the whole application class. <code>Args</code> is a utility class with the shared validations (argument count, valid file extension).</p>
+
+<h3>Sessions</h3>
+<p>A <code>Session</code> owns its images and a queue of pending transformations. The transformations are applied only on save:</p>
+<pre>public void applyPending() {
+    for (Transformation t : transformations) {
+        for (int i = 0; i &lt; images.size(); i++) {
+            images.set(i, t.apply(images.get(i)));
+        }
+    }
+    transformations.clear();
+}</pre>
+<p><code>SessionManager</code> keeps all sessions in a map keyed by id, tracks the current session and hands out consecutive ids.</p>
+
+<h3>Input / output</h3>
+<p><code>ImageReader</code> opens a file, reads the magic number and is the single place that decides which subclass to build (a Factory):</p>
+<pre>String magic = scanner.next();
+return switch (magic) {
+    case "P1" -&gt; readPbm(path, scanner);
+    case "P2" -&gt; readPgm(path, scanner);
+    case "P3" -&gt; readPpm(path, scanner);
+    default  -&gt; throw new InvalidImageName("Unsupported format " + magic);
+};</pre>
+<p><code>ImageWriter</code> only deals with the filesystem; the textual form of each format is produced by the image itself via <code>toNetpbm()</code>.</p>
+
+<h2>4.2. Algorithms and optimisations</h2>
+<p><strong>90&deg; rotation.</strong> A rotation is done by allocating a new grid with swapped dimensions and copying each pixel to its rotated position. For a counter-clockwise (left) rotation the mapping is <code>new[width-1-c][r] = old[r][c]</code>; for clockwise (right) it is <code>new[c][height-1-r] = old[r][c]</code>. After copying, the width and height are swapped. This is an O(width &times; height) operation, which is optimal because every pixel must be touched once.</p>
+<pre>public Image rotateLeft() {
+    int[][] rotated = new int[width][height];
+    for (int r = 0; r &lt; height; r++)
+        for (int c = 0; c &lt; width; c++)
+            rotated[width - 1 - c][r] = pixels[r][c];
+    pixels = rotated;
+    swapDimensions();
+    return this;
+}</pre>
+<p><strong>Grayscale / negative / monochrome</strong> are all single passes over the pixel grid (O(width &times; height)), each touching every pixel once.</p>
+<p><strong>Deferred application.</strong> Instead of transforming the pixels immediately, each operation is stored as a <code>Transformation</code> object in the session's queue and applied only at save time. This makes <code>undo</code> trivial (remove the last element of the queue) and avoids repeatedly rewriting the pixel arrays.</p>
+<p><span class="ph">[Optional: add any optimisation you want to highlight, e.g. why arrays were used instead of objects per pixel.]</span></p>
+
+<h2>4.3. Test scenarios</h2>
+<p>The program was tested with the following scenarios. <span class="ph">[Replace the "Result" notes with screenshots of your own runs &mdash; see the figure placeholders below.]</span></p>
+<table>
+  <tr><th>#</th><th>Scenario</th><th>Input</th><th>Expected result</th></tr>
+  <tr><td>1</td><td>Load + queue + undo + save</td><td>load test.ppm; grayscale; rotate left; undo; save</td><td>Only grayscale remains; file saved with "Successfully saved".</td></tr>
+  <tr><td>2</td><td>Load multiple images at once</td><td>load test.ppm test.pgm</td><td>Both images added to the session.</td></tr>
+  <tr><td>3</td><td>Add + collage</td><td>load test.ppm; add testB.ppm; collage horizontal test.ppm testB.ppm out.ppm</td><td>New collage "out.ppm" created and added to the session.</td></tr>
+  <tr><td>4</td><td>Command before load</td><td>grayscale</td><td>"No active session. Use 'load &lt;file&gt;' to start one."</td></tr>
+  <tr><td>5</td><td>Switch to missing session</td><td>switch 99</td><td>"Session with ID: 99 does not exist!"</td></tr>
+  <tr><td>6</td><td>Undo on empty session</td><td>load test.ppm; undo</td><td>"Nothing to undo." (no crash)</td></tr>
+  <tr><td>7</td><td>Load a missing file</td><td>load nope.ppm</td><td>"Could not open file" and no session created.</td></tr>
+  <tr><td>8</td><td>Close then a command</td><td>load test.ppm; close; grayscale</td><td>Session closed; "No active session" afterwards.</td></tr>
+</table>
+<p class="caption">Table 4. Test scenarios and expected results.</p>
+
+<div class="figure">[FIGURE 4: insert a screenshot of the program running scenario 1 (load &rarr; grayscale &rarr; save).]</div>
+<p class="caption">Figure 4. Example run of the editor.</p>
+<div class="figure">[FIGURE 5+: add more screenshots of the test scenarios above as needed.]</div>
+
+<!-- ===================== CHAPTER 5 ===================== -->
+<div class="pagebreak"></div>
+<h1>Chapter 5. Conclusion</h1>
+
+<h2>5.1. Summary of the implemented objectives</h2>
+<p>All the objectives set in section 1.2 were achieved. The program reads and writes valid PBM, PGM and PPM files, supports the full required command set, manages multiple images and sessions with deferred transformations, and never crashes on invalid input. The code was restructured from two large classes into seven focused packages, demonstrating inheritance, polymorphism, interfaces and several design patterns (Command, Template Method, Strategy, Factory).</p>
+
+<h2>5.2. Directions for future development and improvement</h2>
+<ul>
+  <li>Support the <strong>binary</strong> Netpbm variants (P4, P5, P6) in addition to the plain ASCII ones, for smaller files.</li>
+  <li>Make a freshly <code>add</code>-ed image ignore transformations that were queued before it was added, by tracking a per-image starting index.</li>
+  <li>Support file paths that contain spaces (quoted arguments).</li>
+  <li>Use a weighted luminance formula (<code>0.299R + 0.587G + 0.114B</code>) for a more perceptually accurate grayscale.</li>
+  <li>Add more transformations (crop, scale, flip, brightness/contrast).</li>
+  <li><span class="ph">[Add any other ideas of your own.]</span></li>
+</ul>
+
+<!-- ===================== REFERENCES ===================== -->
+<div class="pagebreak"></div>
+<h1>References</h1>
+<ol>
+  <li>Netpbm format &mdash; Wikipedia: http://en.wikipedia.org/wiki/Netpbm_format</li>
+  <li>Oracle, The Java&trade; Tutorials / Java SE API documentation.</li>
+  <li>E. Gamma, R. Helm, R. Johnson, J. Vlissides, <em>Design Patterns: Elements of Reusable Object-Oriented Software</em>, 1994 (Command, Template Method, Strategy, Factory).</li>
+  <li><span class="ph">[Add any other sources you used &mdash; lecture notes, articles, etc. Every source cited in the text must appear here, and vice versa.]</span></li>
+  <li>Project repository (GitHub): <span class="ph">[paste your repository link here]</span></li>
+</ol>
+
+</body>
+</html>
